@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Personal Knowledge Base Graph
+
+An interactive knowledge graph viewer built with **Next.js**, **TypeScript**, and **D3.js**. Map out topics and relationships in a lightweight, browser-based canvas — like a mini Obsidian graph view.
+
+## Live Features
+
+### Core
+- **Interactive Graph Canvas** — Force-directed layout powered by D3.js with zoom and pan
+- **Node CRUD** — Add, edit, and delete topic nodes with title, note, and assigned user
+- **Edge CRUD** — Create directed relationships between nodes with custom labels; delete edges from the detail panel
+- **Detail Panel** — Click any node to open a sidebar with inline editing for title, note, and owner
+- **Persistence** — All graph state saved to `localStorage` and restored on refresh
+- **Seed Data** — Pre-populated with 8 tech topics and 9 relationships on first load
+
+### Stretch Goals (Implemented)
+- **Animations** — Smooth transitions on node selection, edge highlighting, and panel open/close
+- **Connected Highlighting** — Selecting a node highlights its direct neighbors and dims everything else
+- **Drag & Pin** — Drag nodes to reposition; positions persist across reloads
+- **Fit to Center** — One-click button to auto-zoom and center all nodes in the viewport
+
+### Extras
+- **Team Members** — Nodes are assigned to team members (Nancy, Raushan, Golu, Abhikesh, Sourav) with colored avatar badges on the graph
+- **User Badge on Nodes** — Each node displays a small badge showing who created it
+- **Reassign Owner** — Change a node's owner from the detail sidebar
+
+## Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| [Next.js 16](https://nextjs.org/) | React framework with App Router |
+| [TypeScript](https://www.typescriptlang.org/) | Type safety |
+| [D3.js v7](https://d3js.org/) | Force-directed graph rendering |
+| [Tailwind CSS v4](https://tailwindcss.com/) | Styling |
+| localStorage | Client-side persistence |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+
+- npm
+
+### Installation
+
+```bash
+git clone https://github.com/Shriyansh7870/Frontend-Assignment.git
+cd Frontend-Assignment
+npm install
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/
+│   ├── page.tsx            # Main page composing all components
+│   ├── layout.tsx          # Root layout with metadata
+│   └── globals.css         # Tailwind + custom animations
+├── components/
+│   ├── ForceGraph.tsx      # D3.js force-directed graph (core)
+│   ├── NodeDetailPanel.tsx # Sidebar for viewing/editing node details
+│   ├── AddNodeModal.tsx    # Modal to create new nodes
+│   ├── AddEdgeModal.tsx    # Modal to create new edges
+│   └── Toolbar.tsx         # Top bar with stats, actions, team members
+├── data/
+│   └── seed.ts             # Seed data (CSV equivalent) + team members
+├── store/
+│   └── useGraphStore.ts    # State management + localStorage persistence
+└── types/
+    └── graph.ts            # TypeScript interfaces
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Seed Data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Nodes
+| ID | Title | Created By |
+|---|---|---|
+| 1 | React | Nancy |
+| 2 | Next.js | Raushan |
+| 3 | TypeScript | Golu |
+| 4 | State Management | Abhikesh |
+| 5 | Component Design | Sourav |
+| 6 | Performance | Nancy |
+| 7 | Testing | Raushan |
+| 8 | CSS & Styling | Golu |
 
-## Deploy on Vercel
+### Edges
+| Source | Target | Label |
+|---|---|---|
+| Next.js | React | built on |
+| React | TypeScript | pairs well with |
+| React | State Management | uses |
+| React | Component Design | guides |
+| Next.js | Performance | improves |
+| React | Testing | requires |
+| React | CSS & Styling | styled with |
+| State Management | Performance | impacts |
+| Component Design | Performance | impacts |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Usage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Add Node** — Click the "+ Node" button, fill in title, note, and select a team member
+- **Add Edge** — Click the "+ Edge" button, pick source/target nodes and a relationship label
+- **Edit Node** — Click a node on the graph to open the detail sidebar; edit inline
+- **Delete** — Use the detail panel to delete a node or its edges
+- **Drag** — Drag nodes to rearrange; positions are saved
+- **Zoom** — Scroll to zoom in/out; click "Fit" to auto-center all nodes
+- **Reassign** — Change who owns a node from the "Created By" dropdown in the sidebar
