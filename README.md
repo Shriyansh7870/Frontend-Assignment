@@ -120,3 +120,4 @@ src/
 - **Drag** — Drag nodes to rearrange; positions are saved
 - **Zoom** — Scroll to zoom in/out; click "Fit" to auto-center all nodes
 - **Reassign** — Change who owns a node from the "Created By" dropdown in the sidebar
+
