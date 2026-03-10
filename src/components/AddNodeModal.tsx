@@ -1,7 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { teamMembers } from "@/data/seed";
+import { useState, useEffect, useRef } from 'react';
+import { teamMembers } from '@/data/seed';
+import { NODE_PALETTE } from '@/utils/nodeColors';
+import { useTheme } from '@/context/ThemeContext';
+
+const MEMBER_COLORS: Record<string, string> = {
+  Nancy: '#6366f1', Raushan: '#ec4899', Golu: '#f97316',
+  Abhikesh: '#22c55e', Sourav: '#06b6d4',
+};
 
 interface AddNodeModalProps {
   onAdd: (title: string, note: string, createdBy: string) => void;
@@ -9,9 +16,30 @@ interface AddNodeModalProps {
 }
 
 export default function AddNodeModal({ onAdd, onClose }: AddNodeModalProps) {
-  const [title, setTitle] = useState("");
-  const [note, setNote] = useState("");
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const [title, setTitle] = useState('');
+  const [note, setNote] = useState('');
   const [createdBy, setCreatedBy] = useState(teamMembers[0]);
+  const [previewColor, setPreviewColor] = useState(NODE_PALETTE[0].bg);
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { titleRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    if (!title) { setPreviewColor(NODE_PALETTE[0].bg); return; }
+    let hash = 0;
+    for (let i = 0; i < title.length; i++) {
+      hash = ((hash << 5) - hash) + title.charCodeAt(i); hash |= 0;
+    }
+    setPreviewColor(NODE_PALETTE[Math.abs(hash) % NODE_PALETTE.length].bg);
+  }, [title]);
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,86 +48,213 @@ export default function AddNodeModal({ onAdd, onClose }: AddNodeModalProps) {
     onClose();
   };
 
+  const memberColor = MEMBER_COLORS[createdBy] ?? '#6366f1';
+
   return (
     <div
-      className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+      style={{
+        background: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(15,23,42,0.45)',
+        backdropFilter: 'blur(16px) saturate(120%)',
       }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <form
         onSubmit={handleSubmit}
-        className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-md shadow-xl animate-scale-in"
+        className="relative w-full max-w-[440px] rounded-3xl overflow-hidden animate-scale-in"
+        style={{
+          background: isDark
+            ? 'linear-gradient(165deg, rgba(15,18,35,0.98) 0%, rgba(8,10,22,0.99) 100%)'
+            : 'linear-gradient(165deg, #ffffff 0%, #f8fafc 100%)',
+          border: `1px solid ${isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.1)'}`,
+          boxShadow: isDark
+            ? '0 32px 80px -12px rgba(0,0,0,0.85), 0 0 0 1px rgba(99,102,241,0.06), inset 0 1px 0 rgba(255,255,255,0.04)'
+            : '0 32px 80px -12px rgba(0,0,0,0.2), 0 0 0 1px rgba(99,102,241,0.08), 0 0 60px -20px rgba(99,102,241,0.12)',
+        }}
       >
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-            <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-base font-bold text-gray-900">Add New Node</h2>
-            <p className="text-xs text-gray-400">Create a new topic in your graph</p>
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
+          style={{
+            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+            color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)',
+          }}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Header with gradient accent strip */}
+        <div className="relative px-7 pt-7 pb-6 overflow-hidden">
+          {/* Gradient accent bar at top */}
+          <div
+            className="absolute top-0 left-0 right-0 h-[3px]"
+            style={{ background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa)' }}
+          />
+
+          {/* Ambient glow */}
+          <div
+            className="absolute -top-12 -right-12 w-48 h-48 rounded-full pointer-events-none transition-all duration-700"
+            style={{ background: `radial-gradient(circle, ${previewColor}${isDark ? '18' : '12'} 0%, transparent 70%)`, filter: 'blur(30px)' }}
+          />
+          <div
+            className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full pointer-events-none"
+            style={{ background: `radial-gradient(circle, rgba(99,102,241,${isDark ? '0.08' : '0.05'}) 0%, transparent 70%)`, filter: 'blur(25px)' }}
+          />
+
+          <div className="relative flex items-center gap-4">
+            {/* Animated preview node */}
+            <div
+              className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-white text-xl font-black shrink-0 transition-all duration-400"
+              style={{
+                background: `linear-gradient(135deg, ${previewColor} 0%, ${previewColor}bb 100%)`,
+                boxShadow: `0 8px 28px ${previewColor}40, inset 0 1px 0 rgba(255,255,255,0.2)`,
+              }}
+            >
+              {title ? title.charAt(0).toUpperCase() : (
+                <svg className="w-5 h-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                New Node
+              </h2>
+              <p className="text-[13px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                Add a topic to your knowledge graph
+              </p>
+            </div>
           </div>
         </div>
-        <div className="space-y-4">
+
+        {/* Divider */}
+        <div className="mx-7" style={{ height: 1, background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }} />
+
+        {/* Fields */}
+        <div className="px-7 py-6 space-y-5">
+          {/* Title */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] mb-2" style={{ color: 'var(--text-muted)' }}>
+              <div className="w-1 h-1 rounded-full" style={{ background: '#6366f1' }} />
               Title
+              <span className="text-red-400/80 text-[10px]">required</span>
             </label>
             <input
-              type="text"
+              ref={titleRef}
+              className="input-dark"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              autoFocus
-              placeholder="e.g. GraphQL"
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all placeholder:text-gray-300"
+              onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. GraphQL, Docker, CI/CD..."
+              style={{ fontSize: 14, padding: '11px 16px', borderRadius: 14 }}
             />
           </div>
+
+          {/* Note */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-              Note <span className="text-gray-300 normal-case">(optional)</span>
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em]" style={{ color: 'var(--text-muted)' }}>
+                <div className="w-1 h-1 rounded-full" style={{ background: '#8b5cf6' }} />
+                Note
+                <span className="text-[10px] font-normal normal-case opacity-50">optional</span>
+              </label>
+              {note.length > 0 && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                  style={{ background: isDark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.06)', color: 'var(--text-accent)' }}>
+                  {note.length}
+                </span>
+              )}
+            </div>
             <textarea
+              className="input-dark resize-none"
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={e => setNote(e.target.value)}
               rows={3}
-              placeholder="A brief description..."
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all resize-none placeholder:text-gray-300"
+              placeholder="Brief description of this topic..."
+              style={{ lineHeight: '1.7', fontSize: 14, padding: '11px 16px', borderRadius: 14 }}
             />
           </div>
+
+          {/* Created By */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.08em] mb-2" style={{ color: 'var(--text-muted)' }}>
+              <div className="w-1 h-1 rounded-full" style={{ background: '#06b6d4' }} />
               Created By
             </label>
-            <select
-              value={createdBy}
-              onChange={(e) => setCreatedBy(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all appearance-none"
-            >
-              {teamMembers.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0 transition-all duration-300"
+                style={{
+                  background: `linear-gradient(135deg, ${memberColor} 0%, ${memberColor}cc 100%)`,
+                  boxShadow: `0 4px 12px ${memberColor}50`,
+                }}
+              >
+                {createdBy.charAt(0)}
+              </div>
+              <div className="relative flex-1">
+                <select
+                  className="input-dark appearance-none pr-10 cursor-pointer"
+                  value={createdBy}
+                  onChange={e => setCreatedBy(e.target.value)}
+                  style={{ fontSize: 14, padding: '10px 16px', borderRadius: 14 }}
+                >
+                  {teamMembers.map(name => (
+                    <option key={name} value={name} style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>{name}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="flex justify-end gap-2.5 mt-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!title.trim()}
-            className="px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm rounded-xl font-semibold transition-all hover:shadow-md active:scale-95"
-          >
-            Add Node
-          </button>
+
+        {/* Footer */}
+        <div
+          className="flex items-center justify-between px-7 py-5"
+          style={{ borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` }}
+        >
+          <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>
+            Press <kbd className="px-1.5 py-0.5 rounded-md text-[10px] font-bold" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>Esc</kbd> to close
+          </span>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 hover:scale-[1.03] active:scale-95"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                color: 'var(--text-secondary)',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!title.trim()}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white transition-all duration-200 hover:scale-[1.03] active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{
+                background: title.trim()
+                  ? 'linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #8b5cf6 100%)'
+                  : isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.15)',
+                boxShadow: title.trim()
+                  ? '0 6px 24px rgba(99,102,241,0.45), inset 0 1px 0 rgba(255,255,255,0.15)'
+                  : 'none',
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Create Node
+            </button>
+          </div>
         </div>
       </form>
     </div>
